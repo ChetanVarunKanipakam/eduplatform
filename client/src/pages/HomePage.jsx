@@ -5,15 +5,100 @@ import {
   Typography,
   CircularProgress,
   Box,
+  Card,
+  CardContent,
+  CardMedia,
+  Button,
 } from '@mui/material';
-import Slider from 'react-slick';
-import { BookOpen, Layers, Code2 } from 'lucide-react'; // background icons
-import SubjectCard from '../components/SubjectCard.jsx';
-import subjectService from '../services/subjectService';
+import { keyframes } from '@emotion/react';
+import subjectService from '../services/subjectService'; // Make sure this path is correct
+import { useNavigate } from "react-router-dom";
+import Navbar from '../components/Navbar';
+import bg from '../assets/bg2.png';
+// A subtle animation for the background gradient glow
+const animatedGradient = keyframes`
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+`;
 
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+// STYLED SUBJECT CARD COMPONENT
+const SubjectCard = ({ subject }) => {
+  const navigate = useNavigate();
 
+  const handleCardClick = () => {
+    // Navigate to the first lesson of the subject if it exists
+    if (subject && subject.lessons && subject.lessons.length > 0) {
+      navigate(`/subjects/${subject._id}/lessons/${subject.lessons[0]._id}`,{
+state: { subject }, // pass subject and its lessons here
+});
+    } else {
+      console.warn(`Subject "${subject.title}" has no lessons to navigate to.`);
+    }
+  };
+
+  return (
+    <Card
+      onClick={handleCardClick}
+      sx={{
+        height: "380px",
+        width: "500px",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "rgba(30, 41, 59, 0.85)", // Made slightly more opaque for readability
+        backdropFilter: 'blur(8px)', // Frosted glass effect
+        borderRadius: "16px",
+        border: "1px solid rgba(0, 196, 255, 0.4)",
+        cursor: "pointer",
+        overflow: 'hidden', // Ensures CardMedia respects the border radius
+        transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
+        "&:hover": {
+          transform: "translateY(-8px)",
+          boxShadow: "0px 10px 30px rgba(0, 196, 255, 0.3)",
+        },
+      }}
+    >
+      <CardMedia
+        component="img"
+        height="300"
+        image={subject.imageUrl 
+    ? `http://localhost:3000${subject.imageUrl}` 
+    : "https://via.placeholder.com/400x200"}
+        alt={subject.title}
+      />
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Typography
+          variant="h5"
+          sx={{ fontWeight: "bold", color: "#E2E8F0", mb: 1 }}
+        >
+          {subject.title}
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{ color: "#CBD5E0", lineHeight: 1.6 }}
+        >
+          {subject.description}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+};
+
+// SUBJECTS GRID COMPONENT
+const SubjectsGrid = ({ subjects }) => {
+  console.log(subjects)
+  return (
+    <Grid container spacing={6} justifyContent="center">
+      {subjects.map((subject) => (
+        <Grid item key={subject._id} xs={12} sm={6} md={4}>
+          <SubjectCard subject={subject} />
+        </Grid>
+      ))}
+    </Grid>
+  );
+};
+
+// MAIN HOMEPAGE COMPONENT
 const HomePage = () => {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +107,7 @@ const HomePage = () => {
     subjectService
       .getAllSubjects()
       .then((response) => {
-        setSubjects(response.data);
+        setSubjects(response);
         setLoading(false);
       })
       .catch((error) => {
@@ -32,146 +117,120 @@ const HomePage = () => {
   }, []);
 
   if (loading) {
-    return <CircularProgress sx={{ display: 'block', margin: 'auto', mt: 4 }} />;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#0F172A' }}>
+        <CircularProgress sx={{ color: '#00C4FF' }} />
+      </Box>
+    );
   }
 
-  const settings = {
-    dots: true,
-    infinite: true,
-    autoplay: true,
-    autoplaySpeed: 4000,
-    speed: 600,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: false,
-  };
-
- // helper for watermark background icon
-// helper for watermark background icon
-const renderHeroSlide = (bg, Icon, title, subtitle) => (
-  <Box
-    sx={{
-      height: '100vh',
-      background: bg,
-      color: 'white',
-      position: 'relative',
-      overflow: 'hidden',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      textAlign: 'center',
-      px: 2,
-    }}
-  >
-    {/* Background watermark icon - perfectly centered */}
-    <Box
-      sx={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        opacity: 0.08,
-        zIndex: 0,
-      }}
-    >
-      <Icon size={400} />
-    </Box>
-
-    {/* Text container (vertically centered) */}
-    <Box
-      sx={{
-       position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 1,
-        maxWidth: '700px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-      }}
-    >
-      <Typography variant="h2" fontWeight="bold" gutterBottom>
-        {title}
-      </Typography>
-      <Typography variant="h3">{subtitle}</Typography>
-    </Box>
-  </Box>
-);
-
-
-
   return (
-    <Box sx={{ backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
-      {/* Hero Carousel */}
-      <Box sx={{ mb: 6 }}>
-        <Slider {...settings}>
-          {renderHeroSlide(
-            'linear-gradient(to right, #2563eb, #1e3a8a)',
-            Code2,
-            'Unlock Your Potential',
-            'Learn from industry experts and take your career to the next level with our curated courses.'
-          )}
-          {renderHeroSlide(
-            'linear-gradient(to right, #10b981, #065f46)',
-            Layers,
-            'Explore Endless Knowledge',
-            'Join thousands of learners and dive into subjects that inspire you.'
-          )}
-          {renderHeroSlide(
-            'linear-gradient(to right, #f59e0b, #b45309)',
-            BookOpen,
-            'Learn Anytime, Anywhere',
-            'Access your courses on any device and keep growing at your pace.'
-          )}
-        </Slider>
-      </Box>
-
-      {/* Subjects Section */}
+    <>
+      <Navbar />
       <Box
         sx={{
-          py: 8,
-          px: 2,
-          background: 'linear-gradient(to right, #f9fafb, #eef2ff)',
+          backgroundColor: '#0F172A',
+          minHeight: '100vh',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        <Container>
-          <Typography
-            variant="h4"
-            gutterBottom
-            align="center"
-            sx={{ color: '#1E293B', fontWeight: 'bold', mb: 6 }}
+        {/* All content must be positioned relative to be above any pseudo-elements */}
+        <Box  position="sticky" sx={{ zIndex: 1}}>
+          {/* Hero Section */}
+          <Box
+           
+            sx={{
+              minHeight: '20vh', 
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              color: '#E2E8F0',
+              p: 3,
+              // NEW Hero Background: A dark, clean schematic/blueprint
+              backgroundImage: `
+                linear-gradient(rgba(1, 3, 6, 0.9), rgba(0, 0, 0, 1)),
+                url(${bg})
+              `,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
           >
-            Explore Our Subjects
-          </Typography>
+            <Container maxWidth="md">
+              <Typography variant="h2" component="h1" fontWeight="bold" gutterBottom>
+                Unlock Your Potential
+              </Typography>
+              <Typography variant="h5" sx={{ color: '#CBD5E0', mb: 4 }}>
+                Learn from industry experts and build amazing embedded projects.
+              </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                sx={{
+                  background: 'linear-gradient(45deg, #00C4FF, #00E676)',
+                  color: '#0F172A',
+                  fontWeight: 'bold',
+                  padding: '12px 32px',
+                  borderRadius: '12px',
+                  boxShadow: '0px 0px 25px rgba(0, 210, 180, 0.5)',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                    boxShadow: '0px 0px 35px rgba(0, 210, 180, 0.7)',
+                  },
+                }}
+              >
+                Explore Courses
+              </Button>
+            </Container>
+          </Box>
 
-          <Grid container spacing={4} justifyContent="center">
-            {subjects.map((subject) => (
-              <Grid item key={subject._id} xs={12} sm={6} md={4}>
-                <SubjectCard subject={subject} />
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
+          {/* Subjects Section */}
+          <Box
+            sx={{
+              py: 10,
+              // NEW Subjects Background: A detailed PCB (Printed Circuit Board)
+              backgroundImage: `
+                linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 1)),
+                url(${bg})
+              `,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundAttachment: 'fixed', // Parallax effect
+            }}
+          >
+            <Container>
+              <Typography
+                variant="h4"
+                gutterBottom
+                align="center"
+                sx={{ color: '#E2E8F0', fontWeight: 'bold', mb: 8 }}
+              >
+                Explore Our Subjects
+              </Typography>
+              <SubjectsGrid subjects={subjects} />
+            </Container>
+          </Box>
 
-      {/* Footer */}
-      <Box
-        sx={{
-          mt: 8,
-          py: 4,
-          textAlign: 'center',
-          backgroundColor: '#1E293B',
-          color: 'white',
-        }}
-      >
-        <Typography variant="body1">
-          © {new Date().getFullYear()} EduPlatform. All rights reserved.
-        </Typography>
+          {/* Footer */}
+          <Box
+            component="footer"
+            sx={{
+              py: 4,
+              textAlign: 'center',
+              backgroundColor: '#0F172A', // Solid dark footer
+              borderTop: '1px solid rgba(0, 196, 255, 0.2)',
+              color: '#CBD5E0',
+            }}
+          >
+            <Typography variant="body1">
+              © {new Date().getFullYear()} EduPlatform. All rights reserved.
+            </Typography>
+          </Box>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 
