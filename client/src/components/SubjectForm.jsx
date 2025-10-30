@@ -1,97 +1,128 @@
-import { useState, useEffect } from "react";
+// src/components/SubjectForm.jsx
+import { useState, useEffect, useRef } from "react";
 import subjectService from "../services/subjectService";
-import { useNavigate } from "react-router-dom";
+import {
+  Button, Dialog, DialogTitle, DialogContent, DialogActions,
+  TextField, Box, CircularProgress, Typography
+} from "@mui/material";
 
-
-export default function SubjectForm({ existingSubject, onSuccess }) {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    image: null,
-  });
+const SubjectForm = ({ open, onClose, existingSubject, onSuccess }) => {
+  const [formData, setFormData] = useState({ title: "", description: "" });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (existingSubject) {
       setFormData({
         title: existingSubject.title,
         description: existingSubject.description,
-        image: null,
       });
+      if (existingSubject.imageUrl) {
+        setImagePreview(`http://localhost:3000${existingSubject.imageUrl}`);
+      }
+    } else {
+      // Reset form when adding a new subject
+      setFormData({ title: "", description: "" });
+      setImageFile(null);
+      setImagePreview("");
     }
-  }, [existingSubject]);
-  
+  }, [existingSubject, open]); // Depend on 'open' to reset the form
+
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const data = new FormData();
     data.append("title", formData.title);
     data.append("description", formData.description);
-    if (formData.image) data.append("image", formData.image);
+    if (imageFile) {
+      data.append("image", imageFile);
+    }
 
     try {
       if (existingSubject) {
         await subjectService.updateSubject(existingSubject._id, data);
-        alert("Subject updated!");
       } else {
         await subjectService.createSubject(data);
-        alert("Subject created!");
       }
       onSuccess();
     } catch (err) {
       console.error(err);
-      alert("Error submitting form");
+      alert("Error: Could not save subject.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-lg mx-auto bg-white p-6 rounded-2xl shadow"
-    >
-      <h2 className="text-xl font-bold mb-4">
-        {existingSubject ? "Update Subject" : "Add Subject"}
-      </h2>
-       
-      <input
-        type="text"
-        name="title"
-        placeholder="Title"
-        value={formData.title}
-        onChange={handleChange}
-        className="border p-2 w-full mb-3 rounded"
-        required
-      />
-
-      <textarea
-        name="description"
-        placeholder="Description"
-        value={formData.description}
-        onChange={handleChange}
-        className="border p-2 w-full mb-3 rounded"
-        required
-      ></textarea>
-
-      <input
-        type="file"
-        name="image"
-        accept="image/*"
-        onChange={handleChange}
-        className="border p-2 w-full mb-3 rounded"
-      />
-
-      <button
-        type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        {existingSubject ? "Update" : "Create"}
-      </button>
-    </form>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>{existingSubject ? "Update Subject" : "Add New Subject"}</DialogTitle>
+      <form onSubmit={handleSubmit}>
+        <DialogContent>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
+            <TextField
+              name="title"
+              label="Subject Title"
+              value={formData.title}
+              onChange={handleChange}
+              required
+            />
+            <TextField
+              name="description"
+              label="Subject Description"
+              value={formData.description}
+              onChange={handleChange}
+              multiline
+              rows={4}
+              required
+            />
+            <Box sx={{ border: '1px dashed grey', p: 2, borderRadius: '8px', textAlign: 'center' }}>
+              <Button
+                variant="outlined"
+                onClick={() => fileInputRef.current.click()}
+              >
+                Upload Image
+              </Button>
+              <input
+                type="file"
+                name="image"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                style={{ display: "none" }}
+              />
+              {imagePreview && (
+                <Box mt={2}>
+                  <Typography variant="subtitle2">Image Preview:</Typography>
+                  <img src={imagePreview} alt="Preview" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', marginTop: '8px' }} />
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: '16px 24px' }}>
+          <Button onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+          <Button type="submit" variant="contained" disabled={isSubmitting}>
+            {isSubmitting ? <CircularProgress size={24} /> : (existingSubject ? "Update" : "Create")}
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
   );
 }
+
+export default SubjectForm;

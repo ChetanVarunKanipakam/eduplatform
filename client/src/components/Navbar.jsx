@@ -90,19 +90,23 @@ const Navbar = () => {
       <List>
         {user ? (
           <>
+          <ListItemButton component={Link} to="/discussions">
+                <ListItemText primary="Discussions" sx={{ color: '#E2E8F0' }} />
+            </ListItemButton>
             <ListItemButton component={Link} to="/dashboard">
                 <ListItemText primary="Dashboard" sx={{ color: '#E2E8F0' }} />
             </ListItemButton>
             <ListItemButton onClick={handleLogout}>
                 <ListItemText primary="Logout" sx={{ color: '#E2E8F0' }} />
             </ListItemButton>
+            
           </>
         ) : (
-          ['Features', 'Pricing', 'Docs'].map((text) => (
-            <ListItemButton key={text} sx={{ '&:hover': { backgroundColor: 'rgba(0, 196, 255, 0.1)' } }}>
-              <ListItemText primary={text} sx={{ color: '#E2E8F0' }} />
+         <>
+         <ListItemButton component={Link} to="/alldiscussions">
+                <ListItemText primary="Discussions" sx={{ color: '#E2E8F0' }} />
             </ListItemButton>
-          ))
+         </>
         )}
       </List>
     </Box>
@@ -111,7 +115,7 @@ const Navbar = () => {
   return (
     <>
       <AppBar
-        position="sticky"
+        position="fixed"
         sx={{
           backgroundColor: '#0F172A',
           boxShadow: '0px 4px 20px rgba(0, 196, 255, 0.1)',
@@ -136,6 +140,9 @@ const Navbar = () => {
                   <Button color="inherit" component={Link} to="/dashboard" sx={{ color: '#E2E8F0' }}>
                     Dashboard
                   </Button>
+                   <Button color="inherit" component={Link} to="/discussions" sx={{ color: '#E2E8F0' }}>
+                    Discussions
+                  </Button>
                   <Button color="inherit" onClick={handleLogout} sx={{ color: '#E2E8F0' }}>
                     Logout
                   </Button>
@@ -144,11 +151,8 @@ const Navbar = () => {
               ) : (
                 // --- Logged-out user view ---
                 <>
-                  <Button color="inherit" component={Link} to="/features" sx={{ color: '#E2E8F0' }}>
-                    Features
-                  </Button>
-                  <Button color="inherit" component={Link} to="/pricing" sx={{ color: '#E2E8F0' }}>
-                    Pricing
+                   <Button color="inherit" component={Link} to="/alldiscussions" sx={{ color: '#E2E8F0' }}>
+                    Discussions
                   </Button>
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}

@@ -1,85 +1,103 @@
 // src/components/LessonList.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import lessonService from "../services/lessonService";
-import { Button, Card, CardContent, Typography, Box } from "@mui/material";
+import { Button, Card, CardContent, Typography, Box, CircularProgress } from "@mui/material";
 import LessonForm from "./LessonForm";
 import { useParams } from "react-router-dom";
+
 const LessonList = () => {
-    const { subjectId } = useParams();
+  const { subjectId } = useParams();
   const [lessons, setLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [openForm, setOpenForm] = useState(false);
+  console.log(subjectId)
+  // Use useCallback to memoize the fetch function
+  const fetchLessons = useCallback(() => {
+    setLoading(true);
+    lessonService.getLessonsBySubject(subjectId)
+      .then((response) => {
+        // Correctly access the data from the response
+        console.log(response)
+        setLessons(response);
+      })
+      .catch((err) => console.error("Failed to fetch lessons:", err))
+      .finally(() => setLoading(false));
+  }, [subjectId]);
 
   useEffect(() => {
     if (subjectId) {
-       lessonService.getLessonsBySubject(subjectId)
-        .then((res) =>{ console.log(res);setLessons(res.data)})
-        .catch((err) => console.error(err));
+      fetchLessons();
     }
-  }, [subjectId]);
-  console.log(lessons)
+  }, [subjectId, fetchLessons]);
+
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this lesson?")) {
-    //   await deleteLesson(id);
-      setLessons((prev) => prev.filter((l) => l._id !== id));
+      try {
+        await lessonService.deleteLesson(id);
+        // Refetch lessons to ensure consistency
+        fetchLessons();
+      } catch (error) {
+        console.error("Failed to delete lesson:", error);
+      }
     }
+  };
+
+  const handleOpenForm = (lesson = null) => {
+    setSelectedLesson(lesson);
+    setOpenForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setOpenForm(false);
+    setSelectedLesson(null);
   };
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Lessons
-      </Typography>
-
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => {
-          setSelectedLesson(null);
-          setOpenForm(true);
-        }}
-      >
-        Add Lesson
-      </Button>
-
-      <Box sx={{ mt: 2 }}>
-        {lessons.map((lesson) => (
-          <Card key={lesson._id} sx={{ mb: 2 }}>
-            <CardContent>
-              <Typography variant="h6">{lesson.title}</Typography>
-              <Typography variant="body2">{lesson.description}</Typography>
-
-              <Box sx={{ mt: 1 }}>
-                <Button
-                  size="small"
-                  onClick={() => {
-                    setSelectedLesson(lesson);
-                    setOpenForm(true);
-                  }}
-                >
-                  Edit
-                </Button>
-                <Button
-                  size="small"
-                  color="error"
-                  onClick={() => handleDelete(lesson._id)}
-                >
-                  Delete
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        ))}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h5">
+          Lessons
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => handleOpenForm(null)}
+        >
+          Add New Lesson
+        </Button>
       </Box>
+
+      {loading ? <CircularProgress /> : (
+        <Box sx={{ mt: 2 }}>
+          {lessons.map((lesson) => (
+            <Card key={lesson._id} sx={{ mb: 2 }}>
+              <CardContent>
+                <Typography variant="h6">{lesson.title}</Typography>
+                {/* description is no longer part of the schema */}
+                <Box sx={{ mt: 1 }}>
+                  <Button size="small" onClick={() => handleOpenForm(lesson)}>
+                    Edit
+                  </Button>
+                  <Button size="small" color="error" onClick={() => handleDelete(lesson._id)}>
+                    Delete
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      )}
 
       {openForm && (
         <LessonForm
           subjectId={subjectId}
           lesson={selectedLesson}
-          onClose={() => setOpenForm(false)}
-          onSaved={() =>
-            lessonService.getLessonsBySubject(subjectId).then((res) => setLessons(res.data))
-          }
+          onClose={handleCloseForm}
+          onSaved={() => {
+            handleCloseForm();
+            fetchLessons(); // Refetch after saving
+          }}
         />
       )}
     </Box>

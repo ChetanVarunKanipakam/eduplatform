@@ -1,86 +1,137 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar } from '@mui/material';
+import {
+  Box,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Toolbar,
+  Typography
+} from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ForumIcon from '@mui/icons-material/Forum';
 import PersonIcon from '@mui/icons-material/Person';
+import { motion } from 'framer-motion';
+import Navbar from './Navbar';
+import DashboardNavbar from './DashboardNavbar';
 
-const drawerWidth = 260;
+const drawerWidth = 250;
 
-// --- Color Palette ---
 const colors = {
-  primaryBlue: '#0d47a1',
-  lightBlue: '#1976d2',
-  background: '#f4f6f8',
-  paper: '#ffffff',
-  activeLink: 'rgba(25, 118, 210, 0.08)',
+  primaryBlue: '#1565c0',
+  lightBlue: '#42a5f5',
+  gradient: 'linear-gradient(180deg, #1976d2 0%, #2196f3 100%)',
+  white: '#ffffff',
+  grayText: '#546e7a',
+  activeBg: 'rgba(25, 118, 210, 0.1)',
 };
 
 const navItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-  { text: 'All Discussions', icon: <ForumIcon />, path: '/discussions' },
   { text: 'My Discussions', icon: <PersonIcon />, path: '/my-discussions' },
+  { text: 'All Discussions', icon: <ForumIcon />, path: '/discussions' },
 ];
 
 const Layout = () => {
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
+    <>
+      <DashboardNavbar />
+      <Box sx={{ display: 'flex' }}>
+        <Drawer
+          variant="permanent"
+          sx={{
             width: drawerWidth,
-            boxSizing: 'border-box',
-            backgroundColor: colors.paper,
-            borderRight: 'none',
-          },
-        }}
-      >
-        <Toolbar />
-        <Box sx={{ overflow: 'auto', p: 2 }}>
-          <List>
-            {navItems.map((item) => (
-              <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
-                <ListItemButton
-                  component={NavLink}
-                  to={item.path}
-                  end={item.path === '/'} // 'end' ensures the root path is only active when exact
-                  sx={{
-                    borderRadius: '8px',
-                    '&.active': {
-                      backgroundColor: colors.activeLink,
-                      color: colors.lightBlue,
-                      '& .MuiListItemIcon-root': {
-                        color: colors.lightBlue,
-                      },
-                    },
-                  }}
-                >
-                  <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.text} primaryTypographyProps={{ fontWeight: '600' }} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      </Drawer>
+            zIndex:0,
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+              background: colors.gradient,
+              color: colors.white,
+              borderRight: 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              pt: 2,
+            },
+          }}
+        >
+          <Box>
+            <Typography
+              variant="h6"
+              sx={{
+                textAlign: 'center',
+                fontWeight: '700',
+                mb: 2,
+                letterSpacing: 0.5,
+              }}
+            >
+              EduPlatform
+            </Typography>
 
-      {/* Main Content Area */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          bgcolor: colors.background,
-          p: 4,
-          minHeight: '100vh',
-        }}
-      >
-        <Toolbar /> {/* This empty Toolbar provides the necessary spacing */}
-        <Outlet /> {/* Child routes will render here */}
+            <List>
+              {navItems.map((item) => (
+                <ListItem key={item.text} disablePadding>
+                  <ListItemButton
+                    component={NavLink}
+                    to={item.path}
+                    end
+                    sx={{
+                      borderRadius: '12px',
+                      mx: 1,
+                      my: 0.5,
+                      py: 1,
+                      color: colors.white,
+                      '&.active': {
+                        backgroundColor: colors.activeBg,
+                        '& .MuiListItemIcon-root': {
+                          color: colors.white,
+                        },
+                      },
+                      '&:hover': {
+                        backgroundColor: colors.activeBg,
+                        transform: 'scale(1.03)',
+                        transition: '0.2s ease',
+                      },
+                    }}
+                  >
+                    <ListItemIcon sx={{ color: colors.white }}>{item.icon}</ListItemIcon>
+                    <ListItemText
+                      primary={item.text}
+                      primaryTypographyProps={{ fontWeight: 600 }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+
+          <Box sx={{ textAlign: 'center', p: 2, opacity: 0.8 }}>
+            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+              © 2025 EduPlatform
+            </Typography>
+          </Box>
+        </Drawer>
+
+        <Box
+          component={motion.main}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          sx={{
+            flexGrow: 1,
+            backgroundColor: '#f5f8ff',
+            minHeight: '100vh',
+            pt: 8,
+          }}
+        >
+          <Outlet />
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 
