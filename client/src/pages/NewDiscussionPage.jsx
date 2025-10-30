@@ -27,7 +27,7 @@ const NewDiscussionPage = () => {
     e.preventDefault();
     if (!user) {
     // Handle case where user is not logged in
-    navigate('/login'); // or show a message
+    navigate('/notloggedin'); // or show a message
     return;
     }
     try {

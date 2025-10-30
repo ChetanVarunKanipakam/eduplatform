@@ -12,26 +12,31 @@ import {
   Box,
   Chip,
   InputAdornment,
+  Stack,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import api from '../services/api'; // You can uncomment this when your API is ready
+import api from '../services/api'; // Assuming your service is set up
 
 const filterTags = ['All', 'general', 'esp32', 'lpc', 'arduino', 'stm32'];
 
 // --- Color Palette ---
 const colors = {
-  primaryBlue: '#0d47a1', // A deeper, professional blue
+  primaryBlue: '#0d47a1',
   lightBlue: '#1976d2',
-  background: '#f4f6f8', // A very light grey for the page background
+  background: '#f4f6f8',
   paper: '#ffffff',
   textPrimary: '#212121',
   textSecondary: '#757575',
+  success: '#2e7d32', // For answered questions
 };
 
 const DiscussionsPage = () => {
   const [discussions, setDiscussions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
     const fetchDiscussions = async () => {
@@ -39,7 +44,7 @@ const DiscussionsPage = () => {
       try {
         const res = await api.get('/discussions');
         setDiscussions(res.data);
-        
+        console.log(res.data)
       } catch (err) {
         console.error(err);
       }
@@ -47,20 +52,37 @@ const DiscussionsPage = () => {
     fetchDiscussions();
   }, []);
 
+
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
 
-  const filteredDiscussions = discussions.filter((discussion) => {
-    const matchesFilter = activeFilter === 'All' || discussion.postType.toLowerCase() === activeFilter.toLowerCase();
-    const matchesSearch = discussion.title.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
+  const handleSortChange = (event, newSortBy) => {
+    if (newSortBy !== null) {
+      setSortBy(newSortBy);
+    }
+  };
+
+  const sortedAndFilteredDiscussions = discussions
+    .filter((discussion) => {
+      const matchesFilter = activeFilter === 'All' || discussion.postType.toLowerCase() === activeFilter.toLowerCase();
+      const matchesSearch = discussion.title.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesFilter && matchesSearch;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'unanswered':
+          return a.answers.length - b.answers.length;
+        case 'newest':
+        default:
+          return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+    });
 
   return (
-    <Box sx={{ backgroundColor: colors.background, minHeight: '100vh', py: 5 }}>
+    <Box sx={{ backgroundColor: colors.background, minHeight: '80vh', pb: 5,pt:2 }}>
       <Container maxWidth="lg">
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 5 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 5 }}>
           <Typography
             variant="h4"
             component="h1"
@@ -136,33 +158,63 @@ const DiscussionsPage = () => {
           </Box>
         </Paper>
 
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+            <ToggleButtonGroup
+              value={sortBy}
+              exclusive
+              onChange={handleSortChange}
+              aria-label="sort discussions"
+            >
+              <ToggleButton value="newest" aria-label="sort by newest">Newest</ToggleButton>
+              <ToggleButton value="unanswered" aria-label="sort by unanswered">Unanswered</ToggleButton>
+            </ToggleButtonGroup>
+        </Box>
+
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 32px 0 rgba(0,0,0,0.08)' }}>
           <List sx={{ p: 0 }}>
-            {filteredDiscussions.length > 0 ? (
-              filteredDiscussions.map((discussion, index) => (
+            {sortedAndFilteredDiscussions.length > 0 ? (
+              sortedAndFilteredDiscussions.map((discussion, index) => (
                 <ListItem
                   button
                   component={Link}
                   to={`/discussions/${discussion._id}`}
                   key={discussion._id}
-                  divider={index < filteredDiscussions.length - 1}
-                  sx={{
-                    py: 3,
-                    px: 3,
-                    '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.04)' },
-                  }}
+                  divider={index < sortedAndFilteredDiscussions.length - 1}
+                  sx={{ py: 2, px: 3, '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.04)' } }}
                 >
-                  <ListItemText
-                    primary={discussion.title}
-                    secondary={`Asked by ${discussion.author.name} | Category: ${discussion.postType}`}
-                    primaryTypographyProps={{
-                      fontSize: '1.25rem',
-                      fontWeight: '600',
-                      color: colors.textPrimary,
-                      mb: 0.5,
-                    }}
-                    secondaryTypographyProps={{ fontSize: '1rem', color: colors.textSecondary }}
-                  />
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%' }}>
+                    {/* <Stack direction="column" spacing={0.5} alignItems="center" sx={{ color: colors.textSecondary, minWidth: '80px' }}>
+                      <Typography variant="h6">{discussion.votes}</Typography>
+                      <Typography variant="caption">votes</Typography>
+                    </Stack> */}
+                    <Stack 
+                      direction="column" 
+                      spacing={0.5} 
+                      alignItems="center" 
+                      sx={{ 
+                        color: discussion.hasAcceptedAnswer ? colors.success : colors.textSecondary, 
+                        border: '1px solid',
+                        borderColor: discussion.hasAcceptedAnswer ? colors.success : 'transparent',
+                        borderRadius: '4px',
+                        p: 0.5,
+                        minWidth: '80px'
+                      }}
+                    >
+                      <Typography variant="h6">{discussion.answers.length}</Typography>
+                      <Typography variant="caption">answers</Typography>
+                    </Stack>
+                    <ListItemText
+                      primary={discussion.title}
+                      secondary={`Asked by ${discussion.author.name} | Category: ${discussion.postType}`}
+                      primaryTypographyProps={{
+                        fontSize: '1.2rem',
+                        fontWeight: '600',
+                        color: colors.textPrimary,
+                        mb: 0.5,
+                      }}
+                      secondaryTypographyProps={{ fontSize: '0.9rem', color: colors.textSecondary }}
+                    />
+                  </Stack>
                 </ListItem>
               ))
             ) : (
