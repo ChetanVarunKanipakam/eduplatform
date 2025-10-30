@@ -5,6 +5,7 @@ const API_URL = '/api/lessons';
 export const getLessonById = async (lessonId) => {
   console.log(lessonId)
   const res= await axios.get(`http://localhost:3000${API_URL}/${lessonId}`);
+  console.log(res)
   return res.data;
 };
 
@@ -18,11 +19,11 @@ export const createLesson = async (subjectId, formData) => {
   return res.data;
 };
 export const getLessonsBySubject = async (subjectId) =>
-  axios.get(`${API_URL}/subjects/${subjectId}/lessons`);
+  axios.get(`http://localhost:3000${API_URL}/subjects/${subjectId}/lessons`);
 
 export const updateLesson = async (lessonId, formData) => {
   console.log(formData)
-  const res = await axios.put(`${API_URL}/${lessonId}`, formData, {
+  const res = await axios.put(`http://localhost:3000${API_URL}/${lessonId}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return res.data;
