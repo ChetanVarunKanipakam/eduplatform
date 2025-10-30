@@ -9,15 +9,15 @@ import SubjectLessonPage from './pages/SubjectLessonPage.jsx';
 import SubjectList from './components/SubjectList.jsx';
 import LessonList from './components/LessonList.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
-import Dashboard from './pages/DashboardPage.jsx';
-import {ThemeProvider }from '@mui/material/styles';
-// Import new pages
+import Dashboard from './pages/DashboardPage.jsx';// Import new pages
 import DiscussionsPage from './pages/DiscussionsPage.jsx';
 import DiscussionDetailsPage from './pages/DiscussionDetailsPage.jsx';
 import NewDiscussionPage from './pages/NewDiscussionPage.jsx';
-import theme from './theme.js';
 import Layout from './components/Layout.jsx';
 import MyDiscussionsPage from './pages/MyDiscussionPage.jsx';
+import AdminSubjectsPage from './pages/AdminSubjectsPage.jsx';
+import AdminLessonsPage from './pages/AdminLessonsPage.jsx';
+import NotLoggedIn from './pages/NotLoggedin.jsx';
 function App() {
   return (
 
@@ -31,9 +31,10 @@ function App() {
             <Route path="/subjects/:subjectId/lessons/:lessonId" element={<SubjectLessonPage />} />
             <Route path="/subjects/:subjectId" element={<SubjectPage />} />
             <Route path="/lessons/:lessonId" element={<LessonPage />} />
-            <Route path="/subjectlist" element={<SubjectList/>} />
-            <Route path="/subjects/:subjectId/lessonslist" element={<LessonList/>} />
+            <Route path="/subjectlist" element={<AdminSubjectsPage/>} />
+            <Route path="/subjects/:subjectId/lessonslist" element={<AdminLessonsPage/>} />
             <Route path="/alldiscussions" element={<DiscussionsPage />} />
+            <Route path="/notloggedin" element={<NotLoggedIn/>}/>
             {/* Add new discussion routes here */}
             <Route element={<Layout />}>
               <Route path="/dashboard" element={<Dashboard />} />
