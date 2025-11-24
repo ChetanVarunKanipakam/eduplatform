@@ -7,9 +7,12 @@ import {
   Button,
   Container,
   Divider,
+  List,
+  ListItemButton,
+  ListItemText
 } from "@mui/material";
 import { GoogleLogin } from '@react-oauth/google';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import {Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { useAuth } from '../context/AuthContext';
 const NotLoggedIn = () => {
     const {  login} = useAuth();
@@ -98,6 +101,11 @@ const NotLoggedIn = () => {
           <Typography variant="body2" color="text.secondary">
             Don’t have an account? It will be created automatically after login.
           </Typography>
+          <List>
+          <ListItemButton component={Link} to="/">
+                <ListItemText primary="<---- Go back to home page" sx={{ color: '#000000ff' }} />
+            </ListItemButton>
+          </List>
         </Paper>
       </motion.div>
     </Box>

@@ -167,7 +167,7 @@ const Dashboard = () => {
           </motion.div>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        {/* <Grid item xs={12} md={6}>
           <motion.div
             variants={fadeInUp}
             initial="initial"
@@ -205,8 +205,8 @@ const Dashboard = () => {
               </Stack>
             </Paper>
           </motion.div>
-        </Grid>
-      </Grid>
+        </Grid> */}
+      </Grid> 
 
       {/* Subjects Section */}
       <Box sx={{ mt: 8 }}>

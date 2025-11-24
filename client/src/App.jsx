@@ -18,6 +18,8 @@ import MyDiscussionsPage from './pages/MyDiscussionPage.jsx';
 import AdminSubjectsPage from './pages/AdminSubjectsPage.jsx';
 import AdminLessonsPage from './pages/AdminLessonsPage.jsx';
 import NotLoggedIn from './pages/NotLoggedin.jsx';
+import ProtectedEmailRoute from "./components/ProtectedEmailRoute";
+
 function App() {
   return (
 
@@ -31,7 +33,15 @@ function App() {
             <Route path="/subjects/:subjectId/lessons/:lessonId" element={<SubjectLessonPage />} />
             <Route path="/subjects/:subjectId" element={<SubjectPage />} />
             <Route path="/lessons/:lessonId" element={<LessonPage />} />
-            <Route path="/subjectlist" element={<AdminSubjectsPage/>} />
+            <Route
+              path="/subjectlist"
+              element={
+                <ProtectedEmailRoute allowedEmail="vennelachitra@gmail.com">
+                  <AdminSubjectsPage />
+                </ProtectedEmailRoute>
+              }
+            />
+
             <Route path="/subjects/:subjectId/lessonslist" element={<AdminLessonsPage/>} />
             <Route path="/alldiscussions" element={<DiscussionsPage />} />
             <Route path="/notloggedin" element={<NotLoggedIn/>}/>
